@@ -1,0 +1,80 @@
+name: "红果短剧・红果漫剧去广告"
+description: "拦截红果短剧和红果漫剧的穿山甲、播放前贴片、开屏及部分电商推广；保留正片、漫画图片、登录与评论"
+author: "bluee1111"
+homepage: "https://github.com/bluee1111/egern-hongguo-adblock"
+icon: "play.rectangle.fill"
+
+# 红果短剧 iOS: com.phoenix.readnew
+# 红果漫剧 iOS: com.kylin.readnew
+# 规则先按精准广告域名拦截，避免误杀 qznovelvod/fqnovelvod 正片。
+rules:
+  # 穿山甲广告请求与素材
+  - domain_suffix:
+      match: "pangolin-sdk-toutiao.com"
+      policy: REJECT
+  - domain_suffix:
+      match: "pangolin-sdk-toutiao1.com"
+      policy: REJECT
+  - domain_suffix:
+      match: "pglstatp-toutiao.com"
+      policy: REJECT
+  - domain_suffix:
+      match: "pangle.io"
+      policy: REJECT
+
+  # 红果/番茄系广告投放接口
+  - domain_regex:
+      match: "^ads[0-9]*-normal(?:-[a-z0-9]+)?\\.zijieapi\\.com$"
+      policy: REJECT
+  - domain_regex:
+      match: "^p[0-9]+-ad-sign\\.byteimg\\.com$"
+      policy: REJECT
+  - domain_regex:
+      match: "^p[0-9]+-developer-sign\\.bytemaimg\\.com$"
+      policy: REJECT
+  - domain_regex:
+      match: "^(?:ecom[0-9]*-normal|ec[0-9]*-core|isaas[0-9]*-normal)-lq\\.ecombdapi\\.com$"
+      policy: REJECT
+
+  # 播放前/剧集间广告视频；只匹配 reading-ad，不碰 reading-video 正片
+  - domain_regex:
+      match: "^v[0-9]+-(?:(?:bd|se|se-sjy)-daily-)?reading-ad\\.qznovelvod\\.com$"
+      policy: REJECT
+
+  # 广告弹窗、小游戏与广告落地页
+  - domain_suffix:
+      match: "praisewindow.ugsdk.cn"
+      policy: REJECT
+  - domain:
+      match: "praisewindow-sinfonlinea.ugsdk.cn"
+      policy: REJECT
+  - domain:
+      match: "zlink.ugsdk.cn"
+      policy: REJECT
+  - domain_regex:
+      match: "^minigame[0-9]*-normal(?:-[a-z0-9]+)?\\.zijieapi\\.com$"
+      policy: REJECT
+  - domain:
+      match: "www.chengzijianzhan.com"
+      policy: REJECT
+
+url_rewrites:
+  # 穿山甲标准广告接口返回空 JSON，避免客户端等待网络超时
+  - match: "^https?://[^/]*\\.pangolin-sdk-toutiao(?:1)?\\.com/api/ad/union/sdk/(?:get_ads|stats|settings)/"
+    location: "http://reject-dict/"
+  # 常见字节广告视频与素材
+  - match: "^https?://[^/]*\\.(?:pglstatp-toutiao|pstatp)\\.com/(?:obj|img)/(?:ad-app-package|ad|ad-pattern)/"
+    location: "http://reject-video/"
+  - match: "^https?://[^/]*\\.snssdk\\.com/api/ad/"
+    location: "http://reject-dict/"
+
+# 仅 URL 重写需要 MITM；域名规则本身无需解密。
+# 红果部分广告域名存在证书固定，Egern 对其解密失败时，域名 REJECT 仍会生效。
+mitm:
+  hostnames:
+    includes:
+      - "*.pangolin-sdk-toutiao.com"
+      - "*.pangolin-sdk-toutiao1.com"
+      - "*.pglstatp-toutiao.com"
+      - "*.pstatp.com"
+      - "*.snssdk.com"
